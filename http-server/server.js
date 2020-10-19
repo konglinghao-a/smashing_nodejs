@@ -1,4 +1,5 @@
 const http = require('http');
+const qs = require('querystring');
 
 const server = http.createServer((req, res) => {
   if (req.url === '/') {
@@ -13,11 +14,23 @@ const server = http.createServer((req, res) => {
       <p><button>submit</button></p>
     </form>
   `);
-  } else if (req.url === '/url') {
-    res.writeHead(200, { 'Content-Type': 'text/html' });
-    res.end(`
-      you sent a ${req.method} request!
-    `);
+  } else if (req.url === '/url' && req.method === 'POST') {
+    let body = '';
+    req.on('data', (chunk) => {
+      // data 以流的形式传过来，所以要一点一点加
+      body += chunk;
+    })
+
+    req.on('end', () => {
+      res.writeHead(200, { 'Content-Type': 'text/html' });
+      res.end(`
+        <p>Content-Type: ${req.headers['content-type']}</p>
+        <p>your name is : ${qs.parse(body).name}</p>
+      `)
+    })
+  } else {
+    res.writeHead(404);
+    res.end('not found!')
   }
 
 })
